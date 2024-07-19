@@ -8,7 +8,7 @@ pipeline {
 */
     environment {
         registry = "sornsub/vproapp"
-        regirstrycredential = "dockerhub"
+        registryCredential = "dockerhub"
         ARTVERSION = "${env.BUILD_ID}"
     }
 
@@ -49,7 +49,7 @@ pipeline {
             }
         }
 
-        stage('CODE ANALYSIS with SONARQUBE') {
+        stage('CODE ANALYSIS WITH SONARQUBE'){
 
             environment {
                 scannerHome = tool 'sonar4.7'
@@ -73,7 +73,7 @@ pipeline {
             }
         }
 
-        stage('BUILD App Docker Image'){
+        stage('BUILD APP DOCKER IMAGE'){
             steps {
                 script {
                     dockerImage = docker.build registry + ":V$BUILD_NUMBER"
@@ -81,7 +81,7 @@ pipeline {
             }
         }
 
-        stage('UPLOAD Docker Image'){
+        stage('UPLOAD DOCKER IMAGE'){
             steps {
                 script {
                     docker.withRegistry('', registryCredential) {
@@ -92,14 +92,14 @@ pipeline {
             }
         }
 
-        stage("Remove Unused docker image") {
+        stage("REMOVE UNUSED DOCKER IMAGE") {
             steps{
                 sh 'docker rmi $registry:V$BUILD_NUMBER'
             }
         }
         
 
-        stage("Kubernetes Deploy") {
+        stage("KUBERNETES DEPLOY") {
             agent {label 'KOPS'}
                 steps{
                     sh 'helm upgrade --install --force vprofile-stack helm/vprofilecharts --set appimage=${registry}:V${BUILD_NUMBER} --namespace prod'
