@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-vproapp-to-vpromq
+  namespace: default
+spec:
+  podSelector:
+    matchLabels:
+      app: vpromq
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: vproapp
+    ports:
+    - protocol: TCP
+      port: 15672

@@ -1,12 +1,12 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: vpromq01
+  name: vprocache
 spec:
   ports:
-  - port: 15672
-    targetPort: vpromq01-port
+  - port: 11211
+    targetPort: vpromc-port
     protocol: TCP
   selector:
-    app: vpromq01
+    app: vpromc 
   type: ClusterIP

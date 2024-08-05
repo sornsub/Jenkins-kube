@@ -26,7 +26,13 @@ spec:
              secretKeyRef:
                name: app-secret
                key: db-pass
-#        env:
-#         - name: MYSQL_ROOT_PASSWORD
-#           value: "vprodbpass"
-
+        readinessProbe:
+          tcpSocket:
+            port: 3306
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          tcpSocket:
+            port: 3306
+          initialDelaySeconds: 15
+          periodSeconds: 20
