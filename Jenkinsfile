@@ -98,6 +98,14 @@ pipeline {
             }
         }
         
+        stage("DELETE OLD PODS") {
+            steps {
+                script {
+                    // Delete old pod to avoid forbidden updates
+                    sh 'kubectl delete pod secret-env-pod --namespace prod || true'
+                }
+            }
+        }
 
         stage("KUBERNETES DEPLOY") {
             agent {label 'KOPS'}
