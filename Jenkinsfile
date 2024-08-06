@@ -97,7 +97,7 @@ pipeline {
                 sh 'docker rmi $registry:V$BUILD_NUMBER'
             }
         }
-
+ 
         stage("DELETE OLD PODS") {
             steps {
                 script {
@@ -106,7 +106,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage("WAIT FOR DELETION") {
             steps {
                 script {
