@@ -98,24 +98,6 @@ pipeline {
             }
         }
  
-        stage("DELETE OLD PODS") {
-            steps {
-                script {
-                    // Delete old pod to avoid forbidden updates
-                    sh 'kubectl delete pod secret-env-pod --namespace prod || true'
-                }
-            }
-        }
-
-        stage("WAIT FOR DELETION") {
-            steps {
-                script {
-                    // Wait for the Pod to be deleted
-                    sh 'while kubectl get pod secret-env-pod --namespace prod; do echo "Waiting for pod to be deleted"; sleep 5; done'
-                }
-            }
-        }
-
         stage("KUBERNETES DEPLOY") {
             agent {label 'KOPS'}
                 steps{
