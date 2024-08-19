@@ -14,7 +14,8 @@ replicaCount: 1
 image:
   repository: sornsub/vproapp
   pullPolicy: IfNotPresent
-  tag: "V${BUILD_NUMBER}"
+  tag: "latest"
+
 
 
 imagePullSecrets: []
