@@ -1,5 +1,5 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: vprodb
   labels:
@@ -8,6 +8,7 @@ spec:
   selector:
     matchLabels:
       app: vprodb
+  serviceName: "vprodb" # Required for StatefulSet
   replicas: 1
   template:
     metadata:
@@ -26,6 +27,9 @@ spec:
              secretKeyRef:
                name: app-secret
                key: db-pass
+        volumeMounts:
+        - name: vprodb-persistent-storage
+          mountPath: /var/lib/mysql
         readinessProbe:
           tcpSocket:
             port: 3306
@@ -36,3 +40,12 @@ spec:
             port: 3306
           initialDelaySeconds: 15
           periodSeconds: 20
+  volumeClaimTemplates:
+  - metadata:
+      name: vprodb-persistent-storage
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "mysql-storage-class"
+      resources:
+        requests:
+          storage: 5Gi

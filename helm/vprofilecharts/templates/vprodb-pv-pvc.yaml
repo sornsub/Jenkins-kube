@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: vprodb-pv
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: mysql-storage-class
+  hostPath:
+    path: /mnt/data/vprodb
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: vprodb-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: mysql-storage-class
+  resources:
+    requests:
+      storage: 5Gi
