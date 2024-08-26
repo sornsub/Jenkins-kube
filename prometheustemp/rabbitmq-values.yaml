@@ -36,7 +36,7 @@ affinity: {}
 
 loglevel: info
 rabbitmq:
-  url: http://myrabbit:15672
+  url: http://100.70.174.34:15672
   user: guest
   password: guest
   # If existingUserSecret is set then user is ignored
@@ -80,7 +80,7 @@ env: []
 
 prometheus:
   monitor:
-    enabled: false
+    enabled: true
     additionalLabels: {}
     interval: 15s
     namespace: []
