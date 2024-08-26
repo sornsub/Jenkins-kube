@@ -16,10 +16,9 @@ extraArgs:
 fullnameOverride: ""
 
 image:
-  repository: sornsub/vproapp
   pullPolicy: IfNotPresent
-  tag: "latest"
-
+  repository: percona/mongodb_exporter
+  tag: ""
 
 imagePullSecrets: []
 
@@ -31,7 +30,7 @@ livenessProbe:
 
 # [mongodb[+srv]://][user:pass@]host1[:port1][,host2[:port2],...][/database][?options]
 mongodb:
-  uri: "mongodb://mongodb-service:27017"
+  uri: "mongodb://mongodb:27017"
 
 # Name of an externally managed secret (in the same namespace) containing the connection uri as key `mongodb-uri`.
 # If this is provided, the value mongodb.uri is ignored.
@@ -93,12 +92,11 @@ serviceAccount:
   name:
 
 serviceMonitor:
-  enabled: true
+  enabled: false
   interval: 30s
   scrapeTimeout: 10s
   namespace:
-  additionalLabels:
-    release: prometheus
+  additionalLabels: {}
   targetLabels: []
   metricRelabelings: []
   scheme: ""
