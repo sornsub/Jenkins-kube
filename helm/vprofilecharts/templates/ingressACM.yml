@@ -2,23 +2,21 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: vpro-ingress
+  namespace: prod
   annotations:
-    kubernetes.io/ingress.class: "nginx"
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    nginx.ingress.kubernetes.io/rewrite-target: /login
+    kubernetes.io/ingress.class: "alb"
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:us-east-1:654654833430:certificate/f87b3572-02d1-4827-a082-1637d2ec5e19"  # ใส่ ARN ของใบรับรอง ACM ของคุณที่นี่
 spec:
-  tls:
-  - hosts:
-    - vprofile.sornsub.online
-    secretName: vproapp-tls
   rules:
-  - host: vprofile.sornsub.online
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: vproapp-service
-            port:
-              number: 80
+    - host: vprofile.sornsub.online
+      http:
+        paths:
+          - path: /*
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: vproapp-service
+                port:
+                  number: 80
