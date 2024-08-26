@@ -9,6 +9,7 @@ metadata:
   labels:
     app: vprofile
 spec:
+  ingressClassName: nginx  # เพิ่มบรรทัดนี้เพื่อระบุ IngressClassName โดยชัดเจน
   tls:
   - hosts:
     - vprofile.sornsub.online
