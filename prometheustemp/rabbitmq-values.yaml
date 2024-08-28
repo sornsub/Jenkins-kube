@@ -91,7 +91,7 @@ prometheus:
   rules:
     enabled: false
     additionalLabels: {}
-    namespace: "prod"
+    namespace: prod
     additionalRules:
       ## These are just examples rules, please adapt them to your needs.
       ## Make sure to constraint the rules to the current service.
