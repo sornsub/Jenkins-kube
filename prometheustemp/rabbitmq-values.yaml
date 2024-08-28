@@ -19,12 +19,12 @@ resources: {}
   # choice for the user. This also increases chances charts run on environments with little
   # resources, such as Minikube. If you do want to specify resources, uncomment the following
   # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  # limits:
-  #  cpu: 100m
-  #  memory: 128Mi
-  # requests:
-  #  cpu: 100m
-  #  memory: 128Mi
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
 
 priorityClassName: ""
 
@@ -36,7 +36,7 @@ affinity: {}
 
 loglevel: info
 rabbitmq:
-  url: http://100.70.174.34:15672
+  url: http://100.71.92.241:15672
   user: guest
   password: guest
   # If existingUserSecret is set then user is ignored
@@ -67,9 +67,9 @@ additionalLabels: {}
 podLabels: {}
 
 annotations: {}
-#  prometheus.io/scrape: "true"
-#  prometheus.io/path: "/metrics"
-#  prometheus.io/port: 9419
+  prometheus.io/scrape: "true"
+  prometheus.io/path: "/metrics"
+  prometheus.io/port: 9419
 
 # Additional Environment variables
 env: []
@@ -83,7 +83,7 @@ prometheus:
     enabled: true
     additionalLabels: {}
     interval: 15s
-    namespace: []
+    namespace: [prod]
     metricRelabelings: []
     relabelings: []
     targetLabels: []
@@ -91,7 +91,7 @@ prometheus:
   rules:
     enabled: false
     additionalLabels: {}
-    namespace: ""
+    namespace: "prod"
     additionalRules:
       ## These are just examples rules, please adapt them to your needs.
       ## Make sure to constraint the rules to the current service.
@@ -153,6 +153,6 @@ serviceAccount:
   create: true
   # The name of the ServiceAccount to use.
   # If not set and create is true, a name is generated using the fullname template
-  name:
+  name: my-rabbitmq-exporter-sa
   annotations: {}
 
