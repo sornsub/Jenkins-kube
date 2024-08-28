@@ -217,8 +217,8 @@ prometheusRule:
       labels:
         severity: critical
       annotations:
-        summary: MySQL down (instance {{ $labels.instance }})
-        description: MySQL instance is down on {{ $labels.instance }}\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}
+        summary: MySQL down (instance {{ "{{ $labels.instance }}" }})
+        description: MySQL instance is down on {{ "{{ $labels.instance }}" }}\n  VALUE = {{ "{{ $value }}" }}\n  LABELS = {{ "{{ $labels }}" }}
 
     - alert: MysqlMaxConnections
       expr: mysql_global_status_threads_connected / mysql_global_variables_max_connections > 0.9
@@ -226,8 +226,8 @@ prometheusRule:
       labels:
         severity: critical
       annotations:
-        summary: MySQL max connections (instance {{ $labels.instance }})
-        description: MySQL instance {{ $labels.instance }} is reaching its max connections limit.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}
+        summary: MySQL max connections (instance {{ "{{ $labels.instance }}" }})
+        description: MySQL instance {{ "{{ $labels.instance }}" }} is reaching its max connections limit.\n  VALUE = {{ "{{ $value }}" }}\n  LABELS = {{ "{{ $labels }}" }}
 
     ## These are just examples rules, please adapt them to your needs.
     ## Make sure to constraint the rules to the current service.
