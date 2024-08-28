@@ -207,34 +207,23 @@ cloudsqlproxy:
 ## ref: https://github.com/coreos/prometheus-operator#customresourcedefinitions
 
 prometheusRule:
-  enabled: true
+  enabled: false
   additionalLabels: {}
-  namespace: monitor  # Namespace ที่ Prometheus Operator ถูกติดตั้ง
+  namespace: ""
   rules:
     - alert: MysqlDown
       expr: mysql_up == 0
-      for: 5m
+      for: 0m
       labels:
         severity: critical
       annotations:
         summary: MySQL down (instance {{ $labels.instance }})
         description: "MySQL instance is down on {{ $labels.instance }}\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
-    - alert: HighCpuUsage
-      expr: avg by (instance) (rate(node_cpu_seconds_total{mode!="idle"}[5m])) > 0.8
-      for: 5m
+    - alert: MysqlTooManyConnections(>80%)
+      expr: max_over_time(mysql_global_status_threads_connected[1m]) / mysql_global_variables_max_connections * 100 > 80
+      for: 2m
       labels:
         severity: warning
       annotations:
-        summary: High CPU usage detected (instance {{ $labels.instance }})
-        description: "CPU usage is above 80% for the last 5 minutes on {{ $labels.instance }}.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
-
-    ## These are just examples rules, please adapt them to your needs.
-    ## Make sure to constraint the rules to the current service.
-    # - alert: MysqlDown
-    #   expr: mysql_up == 0
-    #   for: 5m
-    #   labels:
-    #     severity: critical
-    #   annotations:
-    #     summary: MySQL down (instance {{ $labels.instance }})
-    #     description: "MySQL instance is down on {{ $labels.instance }}\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+        summary: MySQL too many connections (> 80%) (instance {{ $labels.instance }})
+        description: "More than 80% of MySQL connections are in use on {{ $labels.instance }}\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
