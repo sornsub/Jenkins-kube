@@ -115,15 +115,4 @@ prometheusRule:
         severity: error
       annotations:
         summary: Memcached instance {{ "{{ $labels.instance }}" }} down
-        description: Memcached instance {{ "{{ $labels.instance }}" }} is down.
-
-    ## These are just examples rules, please adapt them to your needs.
-    ## Make sure to constraint the rules to the current service.
-    #  - alert: MemcachedDown
-    #    expr: memcached_up{service="{{ include "prometheus-memcached-exporter.fullname" . }}"} == 0
-    #    for: 2m
-    #    labels:
-    #      severity: error
-    #    annotations:
-    #      summary: Memcached instance {{ "{{ $labels.instance }}" }} down
-    #      description: Memcached instance {{ "{{ $labels.instance }}" }} is down.
+        description: 'Memcached instance {{ "{{ $labels.instance }}" }} is down.'
