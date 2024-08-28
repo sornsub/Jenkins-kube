@@ -209,25 +209,24 @@ cloudsqlproxy:
 prometheusRule:
   enabled: true
   additionalLabels: {}
-  namespace: monitoring  # Namespace ที่ Prometheus Operator ถูกติดตั้ง
+  namespace: monitor  # Namespace ที่ Prometheus Operator ถูกติดตั้ง
   rules:
     - alert: MysqlDown
-      expr: mysql_up{service="{{ include "prometheus-mysql-exporter.fullname" . }}"} == 0
+      expr: mysql_up == 0
       for: 5m
       labels:
         severity: critical
       annotations:
-        summary: MySQL instance {{ $labels.instance }} down
-        description: "MySQL instance {{ $labels.instance }} is down.  VALUE = {{ $value }}  LABELS = {{ $labels }}"
-
-    - alert: MysqlMaxConnections
-      expr: mysql_global_status_threads_connected{service="{{ include "prometheus-mysql-exporter.fullname" . }}" } / mysql_global_variables_max_connections{service="{{ include "prometheus-mysql-exporter.fullname" . }}" } > 0.9
+        summary: MySQL down (instance {{ $labels.instance }})
+        description: "MySQL instance is down on {{ $labels.instance }}\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+    - alert: HighCpuUsage
+      expr: avg by (instance) (rate(node_cpu_seconds_total{mode!="idle"}[5m])) > 0.8
       for: 5m
       labels:
-        severity: critical
+        severity: warning
       annotations:
-        summary: MySQL max connections (instance {{ $labels.instance }})
-        description: "MySQL instance {{ $labels.instance }} is reaching its max connections limit.  VALUE = {{ $value }}  LABELS = {{ $labels }}"
+        summary: High CPU usage detected (instance {{ $labels.instance }})
+        description: "CPU usage is above 80% for the last 5 minutes on {{ $labels.instance }}.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
 
     ## These are just examples rules, please adapt them to your needs.
     ## Make sure to constraint the rules to the current service.
