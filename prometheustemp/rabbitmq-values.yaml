@@ -14,7 +14,7 @@ service:
   internalPort: 9419
   labels: {}
 
-resources: {}
+resources: 
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
   # resources, such as Minikube. If you do want to specify resources, uncomment the following
@@ -36,7 +36,7 @@ affinity: {}
 
 loglevel: info
 rabbitmq:
-  url:  http://100.71.142.216:15672
+  url: http://100.71.142.216:15672
   user: guest
   password: guest
   # If existingUserSecret is set then user is ignored
@@ -66,10 +66,10 @@ additionalLabels: {}
 
 podLabels: {}
 
-annotations: {}
+annotations:
   prometheus.io/scrape: "true"
   prometheus.io/path: "/metrics"
-  prometheus.io/port: 9419
+  prometheus.io/port: "9419"
 
 # Additional Environment variables
 env: []
@@ -155,4 +155,3 @@ serviceAccount:
   # If not set and create is true, a name is generated using the fullname template
   name: my-rabbitmq-exporter-sa
   annotations: {}
-
