@@ -36,7 +36,7 @@ affinity: {}
 
 loglevel: info
 rabbitmq:
-  url: http://100.71.92.241:15672
+  url:  http://100.71.142.216:15672
   user: guest
   password: guest
   # If existingUserSecret is set then user is ignored
