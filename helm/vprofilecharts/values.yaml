@@ -14,7 +14,8 @@ replicaCount: 1
 image:
   repository: sornsub/vproapp
   pullPolicy: IfNotPresent
-  tag: "V${BUILD_NUMBER}"
+  tag: "latest"
+
 
 
 imagePullSecrets: []
@@ -77,6 +78,14 @@ resources: {}
   # requests:
   #   cpu: 100m
   #   memory: 128Mi
+
+vprodb:
+  persistence:
+    enabled: true
+    storageClass: mysql-storage-class
+    accessMode: ReadWriteOnce
+    size: 5Gi
+
 
 livenessProbe:
   httpGet:

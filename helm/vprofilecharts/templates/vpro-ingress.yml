@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: vpro-ingress
+  namespace: prod
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  labels:
+    app: vprofile
+spec:
+  ingressClassName: nginx  # เพิ่มบรรทัดนี้เพื่อระบุ IngressClassName โดยชัดเจน
+  tls:
+  - hosts:
+    - vprofile.sornsub.online
+    secretName: vproapp-tls
+  rules:
+  - host: vprofile.sornsub.online
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: vproapp-service
+            port:
+              number: 80
