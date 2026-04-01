@@ -58,7 +58,7 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {	
                 withSonarQubeEnv('sonar-devsecops') { 
-                sh 'mvn clean verify sonar:sonar -Dsonar.projectKey=devsecops'   
+                sh 'mvn clean verify sonar:sonar -Dsonar.projectKey=devsecops -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml'   
                 }
             }
         } 
@@ -128,15 +128,33 @@ pipeline {
                     sh 'helm upgrade --install --force vprofile-stack helm/vprofilecharts --set appimage=${registry}:V${BUILD_NUMBER} --namespace prod'
                 }
         }
-    }
+    
+	    stage('RunDASTUsingZAP') {
+            agent {label 'KOPS'}
+                steps {
+                    sh '''
+                        APP_HOST=$(kubectl get svc vproapp-service -n prod -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+                        echo "APP_HOST=$APP_HOST"
 
-    post {
-        always {
-            echo 'Slack Notifications.'
-            slackSend channel: '#jenkinscicd',
-                color: COLOR_MAP[currentBuild. currentResult],
-                message: "*${currentBuild.currentResult} :* Job ${env.JOB_NAME} build ${env.BUILD_NUMBER} \n More info at: ${env.BUILD_URL}"
+                        if [ -z "$APP_HOST" ]; then
+                        echo "LoadBalancer hostname not found"
+                        exit 1
+                        fi
+
+                        zap.sh -cmd -quickurl http://$APP_HOST -quickprogress -quickout ${WORKSPACE}/zap_report.html
+                    '''
+			     	archiveArtifacts artifacts: 'zap_report.html'
+		        }	        
+        } 
+
+        post {
+            always {
+                echo 'Slack Notifications.'
+                slackSend channel: '#jenkinscicd',
+                    color: COLOR_MAP[currentBuild. currentResult],
+                    message: "*${currentBuild.currentResult} :* Job ${env.JOB_NAME} build ${env.BUILD_NUMBER} \n More info at: ${env.BUILD_URL}"
+            }
         }
-    }
 
+    }
 }

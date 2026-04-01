@@ -1,11 +1,11 @@
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.visualpathit</groupId>
+    <groupId>com.sornsub</groupId>
     <artifactId>vprofile</artifactId>
     <packaging>war</packaging>
     <version>v2</version>
-    <name>Visualpathit VProfile Webapp</name>
+    <name>Sornsub VProfile Webapp</name>
     <url>http://maven.apache.org</url>
     <properties>
         <spring.version>4.2.0.RELEASE</spring.version>
@@ -225,7 +225,7 @@
             <groupId>io.snyk</groupId>
             <artifactId>snyk-maven-plugin</artifactId>
             <version>2.2.0</version>		
-        </plugins>
+        </plugin>
 
         
         </plugins>
