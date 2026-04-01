@@ -54,15 +54,15 @@ pipeline {
             }
         }
 
-        stages{
-            stage('SonarQube Analysis') {
+        
+        stage('SonarQube Analysis') {
             steps {	
                 withSonarQubeEnv('sonar-devsecops') { 
                 sh 'mvn clean verify sonar:sonar -Dsonar.projectKey=devsecops'   
                 }
-                }
-            } 
-        }
+            }
+        } 
+        
 
             stage('Run SCA Analysis Snyk') {
             steps {		
