@@ -17,7 +17,7 @@ pipeline {
         ARTVERSION = "${env.BUILD_ID}"
     }
 
-    stages{
+    stages {
 
         stage('BUILD'){
             steps {
@@ -146,7 +146,8 @@ pipeline {
 			     	archiveArtifacts artifacts: 'zap_report.html'
 		        }	        
         } 
-
+    }
+    
     post {
         always {
             echo 'Slack Notifications.'
