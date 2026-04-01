@@ -54,6 +54,25 @@ pipeline {
             }
         }
 
+        stages{
+            stage('SonarQube Analysis') {
+            steps {	
+                withSonarQubeEnv('sonar-devsecops') { 
+                sh 'mvn clean verify sonar:sonar -Dsonar.projectKey=devsecops'   
+                }
+                }
+            } 
+        }
+
+            stage('Run SCA Analysis Snyk') {
+            steps {		
+                    withCredentials([string(credentialsId: 'SNYK_TOKEN', variable: 'SNYK_TOKEN')]) {
+                        sh 'mvn snyk:test -fn'
+                    }
+                }
+        }		
+
+/* <---
         stage('CODE ANALYSIS WITH SONARQUBE'){
 
             environment {
@@ -77,7 +96,7 @@ pipeline {
                 }
             }
         }
-
+---> */
         stage('BUILD APP DOCKER IMAGE'){
             steps {
                 script {

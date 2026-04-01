@@ -20,6 +20,9 @@
         <logback.version>1.1.3</logback.version>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
+        <sonar.projectKey>devsecops</sonar.projectKey>
+        <sonar.projectName>vprofile</sonar.projectName>
+        <sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
     </properties>
 
     <dependencies>
@@ -97,8 +100,8 @@
 	</dependency>
 	<dependency>
 	     <groupId>org.springframework</groupId>
-	     <artifactId>spring-test</artifactId>
-	     <version>3.2.3.RELEASE</version>
+         <artifactId>spring-test</artifactId>
+         <version>${spring.version}</version>
 	     <scope>test</scope>
 	</dependency>
 	<dependency>
@@ -211,7 +214,20 @@
  		            </execution>
  		        </executions>
  		</plugin>
-		
+
+        <plugin>
+            <groupId>org.sonarsource.scanner.maven</groupId>
+            <artifactId>sonar-maven-plugin</artifactId>
+            <version>3.11.0.3922</version>
+        </plugin>
+
+        <plugin>
+            <groupId>io.snyk</groupId>
+            <artifactId>snyk-maven-plugin</artifactId>
+            <version>2.2.0</version>		
+        </plugins>
+
+        
         </plugins>
     </build>
 </project>
