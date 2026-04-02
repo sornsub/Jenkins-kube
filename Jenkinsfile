@@ -155,8 +155,8 @@ pipeline {
 
                     echo "Running ZAP scan against ${APP_URL}"
 
-                    docker.image('softwaresecurityproject/zap-stable').inside('--entrypoint=""') {
-                        sh "zap-baseline.py -t ${APP_URL} -r zap_report.html || true"
+                    docker.image('zaproxy/zap-stable').inside('--entrypoint=""') {
+                    sh "zap-baseline.py -t ${APP_URL} -r zap_report.html || true"
                     }
 
                     archiveArtifacts artifacts: 'zap_report.html', allowEmptyArchive: true
