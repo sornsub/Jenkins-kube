@@ -146,7 +146,6 @@ pipeline {
             steps {
                 script {
                     unstash 'app-url'
-
                     def APP_URL = readFile('app_url.txt').trim()
 
                     if (!APP_URL) {
@@ -155,8 +154,17 @@ pipeline {
 
                     echo "Running ZAP scan against ${APP_URL}"
 
-                    docker.image('zaproxy/zap-stable').inside('--entrypoint=""') {
-                    sh "zap-baseline.py -t ${APP_URL} -r zap_report.html || true"
+                    docker.image('zaproxy/zap-stable').inside('-u 0:0 --entrypoint=""') {
+                        sh """
+                            set +e
+                            mkdir -p /zap
+                            rm -rf /zap/wrk
+                            ln -s "\$(pwd)" /zap/wrk
+
+                            zap-baseline.py -t '${APP_URL}' -r zap_report.html -I
+                            ls -lah /zap/wrk || true
+                            exit 0
+                        """
                     }
 
                     archiveArtifacts artifacts: 'zap_report.html', allowEmptyArchive: true
