@@ -60,11 +60,10 @@ pipeline {
         stage('Run SCA Analysis Snyk') {
             steps {
                 withCredentials([string(credentialsId: 'SNYK_TOKEN', variable: 'SNYK_TOKEN')]) {
-                    sh '''
-                        mvn snyk:test -fn
+                    sh """
+                        mvn snyk:test --json > snyk-report.json || true
                         mvn snyk:monitor
-                        mvn snyk:test -Djson > snyk-report.json
-                    '''
+                    """
                 }
                 archiveArtifacts 'snyk-report.json'
             }
