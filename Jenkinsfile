@@ -11,6 +11,7 @@ pipeline {
         registry = "sornsub/vproapp"
         registryCredential = "dockerhub"
         ARTVERSION = "${env.BUILD_ID}"
+        APP_URL = ""
     }
 
     stages {
@@ -50,25 +51,25 @@ pipeline {
         }
 
         stage('SonarQube Analysis') {
-            steps { 
-                withSonarQubeEnv('sonar-devsecops') { 
-                    sh 'mvn clean verify sonar:sonar -Dsonar.projectKey=devsecops -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml'   
+            steps {
+                withSonarQubeEnv('sonar-devsecops') {
+                    sh 'mvn clean verify sonar:sonar -Dsonar.projectKey=devsecops -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml'
                 }
             }
-        } 
+        }
 
         stage('Run SCA Analysis Snyk') {
-            steps {     
+            steps {
                 withCredentials([string(credentialsId: 'SNYK_TOKEN', variable: 'SNYK_TOKEN')]) {
                     sh 'mvn snyk:test -fn'
                 }
             }
-        }       
+        }
 
         stage('BUILD APP DOCKER IMAGE') {
             steps {
                 script {
-                    dockerImage = docker.build registry + ":V$BUILD_NUMBER"
+                    dockerImage = docker.build("${registry}:V${BUILD_NUMBER}")
                 }
             }
         }
@@ -77,7 +78,7 @@ pipeline {
             steps {
                 script {
                     docker.withRegistry('', registryCredential) {
-                        dockerImage.push("V$BUILD_NUMBER")
+                        dockerImage.push("V${BUILD_NUMBER}")
                         dockerImage.push("latest")
                     }
                 }
@@ -86,65 +87,79 @@ pipeline {
 
         stage("REMOVE UNUSED DOCKER IMAGE") {
             steps {
-                sh "docker rmi $registry:V$BUILD_NUMBER"
+                sh "docker rmi ${registry}:V${BUILD_NUMBER} || true"
             }
         }
- 
+
         stage("KUBERNETES DEPLOY") {
             agent { label 'KOPS' }
             steps {
                 sh "helm upgrade --install --force vprofile-stack helm/vprofilecharts --set appimage=${registry}:V${BUILD_NUMBER} --namespace prod"
             }
         }
-        
-    stage('RunDASTUsingZAP') {
-        agent { label 'KOPS' }
-        steps {
-            script {
-                def APP_HOST = ""
 
-                timeout(time: 10, unit: 'MINUTES') {
-                    sh "kubectl wait --namespace prod --for=condition=ready pod -l app=vproapp --timeout=300s"
+        stage('GET APP URL FROM KOPS') {
+            agent { label 'KOPS' }
+            steps {
+                script {
+                    timeout(time: 10, unit: 'MINUTES') {
+                        sh "kubectl wait --namespace prod --for=condition=ready pod -l app=vproapp --timeout=300s"
 
-                    waitUntil {
-                        sleep 5
+                        waitUntil {
+                            sleep 5
 
-                        APP_HOST = sh(
-                            script: "kubectl get svc vproapp-service -n prod -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'",
-                            returnStdout: true
-                        ).trim()
+                            def host = sh(
+                                script: "kubectl get svc vproapp-service -n prod -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'",
+                                returnStdout: true
+                            ).trim()
 
-                        if (!APP_HOST) {
-                            echo "Waiting for hostname..."
+                            if (!host) {
+                                echo "Waiting for hostname..."
+                                return false
+                            }
+
+                            def status = sh(
+                                script: """
+                                    code=\$(curl -s -o /dev/null -w '%{http_code}' --connect-timeout 5 http://${host} || true)
+                                    [ -n "\$code" ] && echo "\$code" || echo "000"
+                                """,
+                                returnStdout: true
+                            ).trim()
+
+                            echo "Status from KOPS: ${status}"
+
+                            if (status == "200" || status == "301" || status == "302") {
+                                env.APP_URL = "http://${host}"
+                                return true
+                            }
+
                             return false
                         }
-
-                        def status = sh(
-                            script: """
-                                code=\$(curl -s -o /dev/null -w '%{http_code}' --connect-timeout 5 http://${APP_HOST} || true)
-                                [ -n "\$code" ] && echo "\$code" || echo "000"
-                            """,
-                            returnStdout: true
-                        ).trim()
-
-                        echo "Status: ${status}"
-
-                        return (status == "200" || status == "301" || status == "302")
                     }
 
-                    echo "Target Ready: http://${APP_HOST}"
+                    echo "APP_URL = ${env.APP_URL}"
                 }
-
-                docker.image('softwaresecurityproject/zap-stable').inside('--entrypoint=""') {
-                    sh "zap-baseline.py -t http://${APP_HOST} -r zap_report.html || true"
-                }
-
-                archiveArtifacts artifacts: 'zap_report.html', allowEmptyArchive: true
             }
         }
-    }
 
+        stage('RunDASTUsingZAP') {
+            agent any
+            steps {
+                script {
+                    if (!env.APP_URL?.trim()) {
+                        error("APP_URL is empty. Cannot run ZAP scan.")
+                    }
 
+                    echo "Running ZAP scan against ${env.APP_URL}"
+
+                    docker.image('softwaresecurityproject/zap-stable').inside('--entrypoint=""') {
+                        sh "zap-baseline.py -t ${env.APP_URL} -r zap_report.html || true"
+                    }
+
+                    archiveArtifacts artifacts: 'zap_report.html', allowEmptyArchive: true
+                }
+            }
+        }
     }
 
     post {
