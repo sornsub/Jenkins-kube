@@ -11,7 +11,6 @@ pipeline {
         registry = "sornsub/vproapp"
         registryCredential = "dockerhub"
         ARTVERSION = "${env.BUILD_ID}"
-        APP_URL = ""
     }
 
     stages {
@@ -129,7 +128,7 @@ pipeline {
                             echo "Status from KOPS: ${status}"
 
                             if (status == "200" || status == "301" || status == "302") {
-                                env.APP_URL = "http://${host}"
+                                writeFile file: 'app_url.txt', text: "http://${host}"
                                 return true
                             }
 
@@ -137,7 +136,7 @@ pipeline {
                         }
                     }
 
-                    echo "APP_URL = ${env.APP_URL}"
+                    stash name: 'app-url', includes: 'app_url.txt'
                 }
             }
         }
@@ -146,20 +145,29 @@ pipeline {
             agent any
             steps {
                 script {
-                    if (!env.APP_URL?.trim()) {
+                    unstash 'app-url'
+
+                    def APP_URL = readFile('app_url.txt').trim()
+
+                    if (!APP_URL) {
                         error("APP_URL is empty. Cannot run ZAP scan.")
                     }
 
-                    echo "Running ZAP scan against ${env.APP_URL}"
+                    echo "Running ZAP scan against ${APP_URL}"
 
                     docker.image('softwaresecurityproject/zap-stable').inside('--entrypoint=""') {
-                        sh "zap-baseline.py -t ${env.APP_URL} -r zap_report.html || true"
+                        sh "zap-baseline.py -t ${APP_URL} -r zap_report.html || true"
                     }
 
                     archiveArtifacts artifacts: 'zap_report.html', allowEmptyArchive: true
                 }
             }
         }
+
+
+
+
+
     }
 
     post {
