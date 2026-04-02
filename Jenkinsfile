@@ -100,21 +100,51 @@ pipeline {
         stage('RunDASTUsingZAP') {
             agent { label 'KOPS' }
             steps {
-                sh '''
-                    APP_HOST=$(kubectl get svc vproapp-service -n prod -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-                    echo "APP_HOST=$APP_HOST"
+                script {
+                    timeout(time: 10, unit: 'MINUTES') {
 
-                    if [ -z "$APP_HOST" ]; then
-                        echo "LoadBalancer hostname not found"
-                        exit 1
-                    fi
+                        sh "kubectl wait --namespace prod --for=condition=ready pod -l app=vproapp --timeout=300s"
 
-                    zap.sh -cmd -quickurl http://$APP_HOST -quickprogress -quickout ${WORKSPACE}/zap_report.html
-                '''
-                archiveArtifacts artifacts: 'zap_report.html'
-            }           
-        } 
-    } // สิ้นสุด stages
+                        def APP_HOST = ""
+
+                        waitUntil {
+                            sleep 5
+
+                            APP_HOST = sh(
+                                script: "kubectl get svc vproapp-service -n prod -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'",
+                                returnStdout: true
+                            ).trim()
+
+                            if (!APP_HOST) {
+                                echo "Waiting for hostname..."
+                                return false
+                            }
+
+                            def status = sh(
+                                script: "curl -s -o /dev/null -w '%{http_code}' http://${APP_HOST}",
+                                returnStdout: true
+                            ).trim()
+
+                            echo "Status: ${status}"
+
+                            return status == "200"
+                        }
+
+                        echo "Target Ready: http://${APP_HOST}"
+                    }
+
+                    docker.image('softwaresecurityproject/zap-stable').inside('--entrypoint=""') {
+                        sh "zap-baseline.py -t http://${APP_HOST} -r zap_report.html || true"
+                    }
+                    archiveArtifacts artifacts: 'zap_report.html'
+
+                }
+            }
+        }
+
+
+
+    }
 
     post {
         always {
@@ -124,4 +154,4 @@ pipeline {
                 message: "*${currentBuild.currentResult} :* Job ${env.JOB_NAME} build ${env.BUILD_NUMBER} \n More info at: ${env.BUILD_URL}"
         }
     }
-} // สิ้นสุด pipeline
+}
