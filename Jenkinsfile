@@ -96,52 +96,53 @@ pipeline {
                 sh "helm upgrade --install --force vprofile-stack helm/vprofilecharts --set appimage=${registry}:V${BUILD_NUMBER} --namespace prod"
             }
         }
-    
-        stage('RunDASTUsingZAP') {
-            agent { label 'KOPS' }
-            steps {
-                script {
-                    timeout(time: 10, unit: 'MINUTES') {
+        
+    stage('RunDASTUsingZAP') {
+        agent { label 'KOPS' }
+        steps {
+            script {
+                def APP_HOST = ""
 
-                        sh "kubectl wait --namespace prod --for=condition=ready pod -l app=vproapp --timeout=300s"
+                timeout(time: 10, unit: 'MINUTES') {
+                    sh "kubectl wait --namespace prod --for=condition=ready pod -l app=vproapp --timeout=300s"
 
-                        def APP_HOST = ""
+                    waitUntil {
+                        sleep 5
 
-                        waitUntil {
-                            sleep 5
+                        APP_HOST = sh(
+                            script: "kubectl get svc vproapp-service -n prod -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'",
+                            returnStdout: true
+                        ).trim()
 
-                            APP_HOST = sh(
-                                script: "kubectl get svc vproapp-service -n prod -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'",
-                                returnStdout: true
-                            ).trim()
-
-                            if (!APP_HOST) {
-                                echo "Waiting for hostname..."
-                                return false
-                            }
-
-                            def status = sh(
-                                script: "curl -s -o /dev/null -w '%{http_code}' http://${APP_HOST}",
-                                returnStdout: true
-                            ).trim()
-
-                            echo "Status: ${status}"
-
-                            return status == "200"
+                        if (!APP_HOST) {
+                            echo "Waiting for hostname..."
+                            return false
                         }
 
-                        echo "Target Ready: http://${APP_HOST}"
+                        def status = sh(
+                            script: """
+                                code=\$(curl -s -o /dev/null -w '%{http_code}' --connect-timeout 5 http://${APP_HOST} || true)
+                                [ -n "\$code" ] && echo "\$code" || echo "000"
+                            """,
+                            returnStdout: true
+                        ).trim()
+
+                        echo "Status: ${status}"
+
+                        return (status == "200" || status == "301" || status == "302")
                     }
 
-                    docker.image('softwaresecurityproject/zap-stable').inside('--entrypoint=""') {
-                        sh "zap-baseline.py -t http://${APP_HOST} -r zap_report.html || true"
-                    }
-                    archiveArtifacts artifacts: 'zap_report.html'
-
+                    echo "Target Ready: http://${APP_HOST}"
                 }
+
+                docker.image('softwaresecurityproject/zap-stable').inside('--entrypoint=""') {
+                    sh "zap-baseline.py -t http://${APP_HOST} -r zap_report.html || true"
+                }
+
+                archiveArtifacts artifacts: 'zap_report.html', allowEmptyArchive: true
             }
         }
-
+    }
 
 
     }
